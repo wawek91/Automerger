@@ -5,6 +5,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
+import pl.edu.agh.automerger.mail.MailSender;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -23,6 +24,10 @@ public class AutomergerBean {
 
     @EJB
     private ConfigurationBean configurationBean;
+
+    @EJB
+    private MailSender mailSender;
+
     private Git git;
     private String localPath, remotePath;
     private Repository localRepo;
@@ -58,6 +63,8 @@ public class AutomergerBean {
             if (res.getMergeStatus().equals(MergeResult.MergeStatus.CONFLICTING)) {
                 logger.info("AutomergerBean.merge - conflicts exist");
                 // call mail sender
+                // admin for this moment
+                mailSender.send(configurationBean.getProperty("automerger.mail"));
             } else {
                 logger.info("AutomergerBean.merge - no conflicts");
                 PushCommand pushCommand = git.push();
