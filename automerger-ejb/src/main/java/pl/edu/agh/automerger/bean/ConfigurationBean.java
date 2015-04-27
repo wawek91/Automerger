@@ -1,4 +1,4 @@
-package java.pl.edu.agh.automerger.bean;
+package pl.edu.agh.automerger.bean;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
@@ -19,10 +19,6 @@ public class ConfigurationBean {
     private static final String FILE_PATH = "";
 
     private Properties properties;
-
-    public ConfigurationBean(){
-
-    }
 
     @PostConstruct
     private void init() {

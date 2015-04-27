@@ -1,11 +1,11 @@
-package java.pl.edu.agh.automerger.bean;
+package pl.edu.agh.automerger.bean;
 
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
-import java.pl.edu.agh.automerger.mail.MailSender;
+import pl.edu.agh.automerger.mail.MailSender;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -32,17 +32,18 @@ public class AutomergerBean {
     private String localPath, remotePath;
     private Repository localRepo;
 
-
-    public AutomergerBean() {
-
-    }
-
     @PostConstruct
-    public void init() throws IOException {
+    public void init() {
         logger.info("AutomergerBean.init - invoked");
         localPath = configurationBean.getProperty("automerger.localpath");
         remotePath = configurationBean.getProperty("automerger.remotepath");
-        localRepo = new FileRepository(localPath + "/.git");
+
+        try {
+          localRepo = new FileRepository(localPath + "/.git");
+        } catch (IOException ex) {
+          logger.info("Git repository was not found under " + localPath);
+        }
+
         git = new Git(localRepo);
     }
 
