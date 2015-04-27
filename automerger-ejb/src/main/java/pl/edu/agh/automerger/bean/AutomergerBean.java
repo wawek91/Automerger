@@ -1,11 +1,11 @@
-package pl.edu.agh.automerger.bean;
+package java.pl.edu.agh.automerger.bean;
 
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
-import pl.edu.agh.automerger.mail.MailSender;
+import java.pl.edu.agh.automerger.mail.MailSender;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;

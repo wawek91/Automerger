@@ -1,4 +1,4 @@
-package pl.edu.agh.automerger.bean;
+package java.pl.edu.agh.automerger.bean;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;

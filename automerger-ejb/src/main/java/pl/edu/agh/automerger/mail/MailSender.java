@@ -1,4 +1,4 @@
-package pl.edu.agh.automerger.mail;
+package java.pl.edu.agh.automerger.mail;
 
 import javax.ejb.Asynchronous;
 import javax.ejb.Singleton;
