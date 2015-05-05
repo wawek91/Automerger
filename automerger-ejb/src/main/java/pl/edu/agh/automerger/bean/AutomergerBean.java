@@ -5,6 +5,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
+import pl.edu.agh.automerger.Properties;
 import pl.edu.agh.automerger.mail.MailSender;
 
 import javax.annotation.PostConstruct;
@@ -22,6 +23,8 @@ public class AutomergerBean {
 
     private Logger logger = Logger.getLogger("AutomergerBean");
 
+    private static final String GIT_EXTENSION = "/.git";
+
     @EJB
     private ConfigurationBean configurationBean;
 
@@ -35,11 +38,11 @@ public class AutomergerBean {
     @PostConstruct
     public void init() {
         logger.info("AutomergerBean.init - invoked");
-        localPath = configurationBean.getProperty("automerger.localpath");
-        remotePath = configurationBean.getProperty("automerger.remotepath");
+        localPath = configurationBean.getProperty(Properties.LOCAL_PATH);
+        remotePath = configurationBean.getProperty(Properties.REMOTE_PATH);
 
         try {
-          localRepo = new FileRepository(localPath + "/.git");
+          localRepo = new FileRepository(localPath + GIT_EXTENSION);
         } catch (IOException ex) {
           logger.info("Git repository was not found under " + localPath);
         }
@@ -52,12 +55,12 @@ public class AutomergerBean {
         logger.info("AutomergerBean.merge - invoked");
         try {
             CheckoutCommand checkoutCommand = git.checkout();
-            checkoutCommand.setName(configurationBean.getProperty("automerger.master"));
+            checkoutCommand.setName(configurationBean.getProperty(Properties.MASTER_BRANCH_NAME));
             checkoutCommand.setCreateBranch(false); // probably not needed, just to make sure
             checkoutCommand.call(); // switch to "master" branch
 
             MergeCommand mergeCommand = git.merge();
-            Ref branch = localRepo.getRef(configurationBean.getProperty("automerger.external_branch"));
+            Ref branch = localRepo.getRef(configurationBean.getProperty(Properties.EXTERNAL_BRANCH_NAME));
             mergeCommand.include(branch);
             MergeResult res = mergeCommand.call(); // actually do the merge
 
@@ -65,7 +68,7 @@ public class AutomergerBean {
                 logger.info("AutomergerBean.merge - conflicts exist");
                 // call mail sender
                 // admin for this moment
-                mailSender.send(configurationBean.getProperty("automerger.mail"));
+                mailSender.sendTo(configurationBean.getProperty(Properties.EMAIL_ADDRESS));
             } else {
                 logger.info("AutomergerBean.merge - no conflicts");
                 PushCommand pushCommand = git.push();

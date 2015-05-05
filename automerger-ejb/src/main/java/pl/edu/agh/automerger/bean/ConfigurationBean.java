@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 public class ConfigurationBean {
 
     private Logger logger = Logger.getLogger("ConfigurationBean");
+
     private static final String FILE_PATH = "";
 
     private Properties properties;
@@ -24,10 +25,9 @@ public class ConfigurationBean {
     private void init() {
         logger.info("ConfigurationBean.init - invoked");
         try {
-            InputStream inputStream = this.getClass().
-                    getClassLoader().getResourceAsStream(FILE_PATH);
+            InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(FILE_PATH);
             properties = new Properties();
-                properties.load(inputStream);
+            properties.load(inputStream);
         } catch (IOException e) {
             logger.warning("ConfigurationBean.init - IOException" + e);
         }
