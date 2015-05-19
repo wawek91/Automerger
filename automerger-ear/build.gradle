@@ -1,0 +1,15 @@
+apply plugin: 'ear'
+
+description = 'automerger-ear'
+
+dependencies {
+    deploy project(':automerger-ejb')
+    earlib project(':automerger-core')
+}
+
+ear {
+    libDirName 'APP-INF/lib'
+    deploymentDescriptor {
+        applicationName = "Automerger"
+    }
+}

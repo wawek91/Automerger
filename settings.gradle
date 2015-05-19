@@ -1,0 +1,6 @@
+rootProject.name = 'Automerger'
+include 'automerger-core'
+include 'automerger-standalone'
+include 'automerger-tools'
+include 'automerger-ejb'
+include 'automerger-ear'

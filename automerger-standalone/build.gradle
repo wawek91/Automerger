@@ -1,0 +1,7 @@
+apply plugin: 'java'
+
+description = 'automerger-standalone'
+
+dependencies {
+    compile project(":automerger-core")
+}
