@@ -11,9 +11,13 @@ EAR building module, allowing to deploy an EJB onto an application server.
 EJB building module, which uses core merging functionality adjusted to work in JEE environment.  
 Repository configuration is stored in `repository.properties`, mailing configuration is stored in `mailing.properties`.
 
+**IMPORTANT**: If *gmail* is used as a mail service provider, it should have '2-step verification' disabled and 'access for less secure apps' enabled. 
+
 ## automerger-standalone
 Standalone version of Automerger, allowing to immediately test core module work.  
 Repository configuration is stored in `repository.properties`, mailing configuration is stored in `mailing.properties`.
+
+**IMPORTANT**: If *gmail* is used as a mail service provider, it should have '2-step verification' disabled and 'access for less secure apps' enabled.
 
 ## automerger-tools
 Repository configuration is stored in `repository.properties`.
