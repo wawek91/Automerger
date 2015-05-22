@@ -9,7 +9,7 @@ public abstract class MailingConfiguration extends Configuration {
   private static final String SMTP_AUTH = "smtp.auth";
 
   // is STARTTLS enabled
-  private static final String SMTP_STARTTLS = "smtp.starttls.enable";
+  private static final String SMTP_STARTTLS = "smtp.starttls.enabled";
 
   // SMTP host name
   private static final String SMTP_HOST = "smtp.host";
