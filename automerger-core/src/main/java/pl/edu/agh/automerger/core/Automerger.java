@@ -4,12 +4,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.MergeResult.MergeStatus;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
 import pl.edu.agh.automerger.core.config.RepositoryConfiguration;
+import pl.edu.agh.automerger.core.objects.ConflictAuthor;
+import pl.edu.agh.automerger.core.utils.ConflictingCommitsStringFormatter;
+import pl.edu.agh.automerger.core.utils.ConflictsParser;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 
 /**
  * Core class performing basic operations.
@@ -81,21 +86,34 @@ public abstract class Automerger {
    * Inspects merge operation result and handles it appropriately.
    */
   private void handleMergeResult(final MergeResult mergeResult) {
-    if (mergeResult.getMergeStatus().equals(MergeResult.MergeStatus.CONFLICTING)) {
-      logger.info("Conflicts exist");
-      conflict(mergeResult);
-    } else {
-      logger.info("No conflicts");
-      // TODO should commit first?
-      //git.push().call();
+    final MergeStatus mergeStatus = mergeResult.getMergeStatus();
+    logger.info("Merge status: {}", mergeStatus);
+
+    if (mergeStatus.isSuccessful()) {
+      pushToRemote();
+    } else if (MergeStatus.CONFLICTING.equals(mergeStatus)) {
+      informAboutConflicts(mergeResult);
     }
   }
 
   /**
-   * Executes actions proper for the given merge conflict.
+   * Pushes merged changes to the remote branch.
    */
-  private void conflict(final MergeResult mergeResult) {
+  private void pushToRemote() {
+    //git.push().call();
+  }
+
+  /**
+   * Prepares human readable information about occurred merge conflicts and sends them to conflicting commits authors.
+   */
+  private void informAboutConflicts(final MergeResult mergeResult) {
     //getMailer().sendTo(""); //TODO
+    final Collection<ConflictAuthor> conflictsByAuthors = new ConflictsParser().parse(mergeResult);
+
+    final ConflictingCommitsStringFormatter formatter = new ConflictingCommitsStringFormatter();
+    for (ConflictAuthor conflictAuthor : conflictsByAuthors) {
+      logger.info("Conflicts:\n{}", formatter.getFormattedStringOf(conflictAuthor.getConflictingCommitsByName().values()));
+    }
   }
 
   /**
