@@ -51,7 +51,7 @@ public class LocalRepositoryPreparer {
   }
 
   /**
-   * Prepares an up-to-date copy of remote repository.
+   * Prepares an up-to-date copy of remote repository, leaving it on the main branch.
    */
   private void prepareCleanRepository() throws GitAPIException, IOException, LocalRepositoryException {
     if (repositoryDoesNotExist()) {
@@ -64,7 +64,9 @@ public class LocalRepositoryPreparer {
     if (erroneousRepository()) {
       throw new LocalRepositoryException();
     }
+
     resetBranches();
+    checkoutMainBranch();
   }
 
   /**
@@ -119,13 +121,13 @@ public class LocalRepositoryPreparer {
   }
 
   /**
-   * Resets all local branches to the remotes' stages and stays on the main one at the end.
+   * Resets all local branches to the remotes' stages.
    */
   private void resetBranches() {
     try {
+      resetBranch(Parameters.getMainBranchName(), Parameters.getMainBranchRef());
       resetBranch(Parameters.getNonConflictingFeatureBranchName(), Parameters.getNonConflictingFeatureBranchRef());
       resetBranch(Parameters.getConflictingFeatureBranchName(), Parameters.getConflictingFeatureBranchRef());
-      resetBranch(Parameters.getMainBranchName(), Parameters.getMainBranchRef());
     }
     catch (GitAPIException e) {
       e.printStackTrace();
@@ -136,8 +138,11 @@ public class LocalRepositoryPreparer {
    * Checks out the branch with given name and, if repository clone wasn't made, performs the hard reset to a given remotes state.
    */
   private void resetBranch(final String branchName, final String remoteBranchRef) throws GitAPIException {
-    checkoutBranch(branchName);
-    if (!clonePerformed) {
+    final boolean isMainBranch = Parameters.getMainBranchName().equals(branchName);
+
+    checkoutBranch(branchName, isMainBranch);
+
+    if (!clonePerformed || !isMainBranch) {
       resetCurrentBranchToRemoteState(remoteBranchRef);
     }
   }
@@ -145,9 +150,8 @@ public class LocalRepositoryPreparer {
   /**
    * Checks out a branch with given name.
    */
-  private void checkoutBranch(final String branchName) throws GitAPIException {
-    final boolean mainBranch = Parameters.getMainBranchName().equals(branchName);
-    git.checkout().setName(branchName).setCreateBranch(clonePerformed && !mainBranch).call();
+  private void checkoutBranch(final String branchName, final boolean isMainBranch) throws GitAPIException {
+    git.checkout().setName(branchName).setCreateBranch(clonePerformed && !isMainBranch).call();
   }
 
   /**
@@ -155,6 +159,13 @@ public class LocalRepositoryPreparer {
    */
   private void resetCurrentBranchToRemoteState(final String remoteBranchRef) throws GitAPIException {
     git.reset().setMode(ResetCommand.ResetType.HARD).setRef(remoteBranchRef).call();
+  }
+
+  /**
+   * Checks out the main branch.
+   */
+  private void checkoutMainBranch() throws GitAPIException {
+    checkoutBranch(Parameters.getMainBranchName(), true);
   }
 
   /**
