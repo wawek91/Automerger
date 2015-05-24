@@ -11,8 +11,8 @@ import pl.edu.agh.automerger.core.config.RepositoryConfiguration;
 import pl.edu.agh.automerger.core.objects.ConflictAuthor;
 import pl.edu.agh.automerger.core.utils.ConflictingCommitsStringFormatter;
 import pl.edu.agh.automerger.core.utils.ConflictsParser;
+import pl.edu.agh.automerger.core.utils.LocalRepositoryPreparer;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -29,18 +29,18 @@ public abstract class Automerger {
 
   public Automerger() {
     repoConfig = getRepositoryConfiguration();
-    initGit();
+    prepareLocalRepository();
   }
 
   /**
-   * Initializes Git object set on local repository.
+   * Prepares Git object set on an up-to-date local repository.
    */
-  private void initGit() {
+  private void prepareLocalRepository() {
     try {
-      git = Git.open(new File(repoConfig.getLocalRepositoryPath()));
+      git = new LocalRepositoryPreparer(repoConfig).prepareRepository();
     }
-    catch (IOException e) {
-      logger.info("Git repository was not found under {}\n{}", repoConfig.getLocalRepositoryPath(), e);
+    catch (Exception e) {
+      logger.error(e);
     }
   }
 
