@@ -71,7 +71,7 @@ public abstract class Automerger {
    * Checks out a branch set as the main one.
    */
   private void checkoutMainBranch() throws GitAPIException {
-    git.checkout().setName(repoConfig.getMainBranchName()).call(); //TODO should clone/pull first if not existing?
+    git.checkout().setName(repoConfig.getMainBranchName()).call();
   }
 
   /**
