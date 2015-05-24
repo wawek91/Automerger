@@ -7,6 +7,7 @@ import pl.edu.agh.automerger.core.config.MailingConfiguration;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import java.io.UnsupportedEncodingException;
 import java.util.Properties;
 
 /**
@@ -19,6 +20,9 @@ public abstract class Mailer {
   private static final String SMTP_HOST = "mail.smtp.host";
   private static final String SMTP_PORT = "mail.smtp.port";
 
+  private static final String NAME_PARAM = "{name}";
+  private static final String DETAILS_PARAM = "{details}";
+
   private final Logger logger = LogManager.getLogger();
 
   private MailingConfiguration mailConfig;
@@ -30,16 +34,16 @@ public abstract class Mailer {
   /**
    * Sends an information e-mail to the given recipient.
    */
-  protected void sendTo(String recipient) {
-    logger.info("Preparing mail for conflict author");
+  protected void sendMessage(final String recipient, final String emailAddress, final String parametrizedContent) {
+    logger.info("Preparing mail for conflict author '{}'", recipient);
     final Session session = prepareAuthenticatedSession();
 
     try {
-      final Message message = prepareMessage(session, recipient);
+      final Message message = prepareMessage(session, recipient, emailAddress, parametrizedContent);
       Transport.send(message);
-      logger.info("Mail successfully sent");
+      logger.info("Mail successfully sent to '{}'", recipient);
     } catch (MessagingException e) {
-      logger.info("A MessagingException occurred while sending mail");
+      logger.info("A MessagingException occurred while sending mail to '{}'", recipient);
       throw new RuntimeException(e);
     }
   }
@@ -70,13 +74,26 @@ public abstract class Mailer {
   /**
    * Prepares Message object filled with proper data.
    */
-  private Message prepareMessage(final Session session, final String recipient) throws MessagingException {
+  private Message prepareMessage(final Session session, final String recipient, final String emailAddress,
+                                 final String parametrizedContent) throws MessagingException {
     final Message message = new MimeMessage(session);
-    message.setFrom(new InternetAddress(mailConfig.getMessageSender()));
-    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
+    try {
+      message.setFrom(new InternetAddress(mailConfig.getUsername(), mailConfig.getMessageSender()));
+    }
+    catch (UnsupportedEncodingException e) {
+      logger.error(e);
+    }
+    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(emailAddress));
     message.setSubject(mailConfig.getMessageSubject());
-    message.setText(mailConfig.getMessageContent());
+    message.setText(prepareMessageContent(recipient, parametrizedContent));
     return message;
+  }
+
+  /**
+   * Returns message content with parametrized values applied.
+   */
+  private String prepareMessageContent(final String recipient, final String parametrizedContent) {
+    return mailConfig.getMessageContent().replace(NAME_PARAM, recipient).replace(DETAILS_PARAM, parametrizedContent);
   }
 
 }

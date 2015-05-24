@@ -21,8 +21,8 @@ public class MailSender extends Mailer {
    * Sends conflict information e-mail to given recipient.
    */
   @Asynchronous
-  public void sendTo(String recipient) {
-    super.sendTo(recipient);
+  public void sendMessage(final String recipient, final String parametrizedContent) {
+    super.sendMessage(recipient, parametrizedContent);
   }
 
   /**

@@ -107,12 +107,15 @@ public abstract class Automerger {
    * Prepares human readable information about occurred merge conflicts and sends them to conflicting commits authors.
    */
   private void informAboutConflicts(final MergeResult mergeResult) {
-    //getMailer().sendTo(""); //TODO
     final Collection<ConflictAuthor> conflictsByAuthors = new ConflictsParser().parse(mergeResult);
-
     final ConflictingCommitsStringFormatter formatter = new ConflictingCommitsStringFormatter();
+    final Mailer mailer = getMailer();
+    String conflictsPerAuthor;
+
     for (ConflictAuthor conflictAuthor : conflictsByAuthors) {
-      logger.info("Conflicts:\n{}", formatter.getFormattedStringOf(conflictAuthor.getConflictingCommitsByName().values()));
+      conflictsPerAuthor = formatter.getFormattedStringOf(conflictAuthor.getConflictingCommitsByName().values());
+      mailer.sendMessage(conflictAuthor.getName(), conflictAuthor.getEmailAddress(), conflictsPerAuthor);
+      logger.info("Conflicts of '{}':\n{}", conflictAuthor.getName(), conflictsPerAuthor);
     }
   }
 
