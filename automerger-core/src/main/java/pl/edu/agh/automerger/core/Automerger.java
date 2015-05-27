@@ -107,7 +107,8 @@ public abstract class Automerger {
    * Prepares human readable information about occurred merge conflicts and sends them to conflicting commits authors.
    */
   private void informAboutConflicts(final MergeResult mergeResult) {
-    final Collection<ConflictAuthor> conflictsByAuthors = new ConflictsParser().parse(mergeResult);
+    final ConflictsParser conflictsParser = new ConflictsParser(git.getRepository(), repoConfig.getFeatureBranchName());
+    final Collection<ConflictAuthor> conflictsByAuthors = conflictsParser.parse(mergeResult);
     final ConflictingCommitsStringFormatter formatter = new ConflictingCommitsStringFormatter();
     final Mailer mailer = getMailer();
     String conflictsPerAuthor;

@@ -1,12 +1,15 @@
 package pl.edu.agh.automerger.core.utils;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.MergeResult;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import pl.edu.agh.automerger.core.objects.ConflictAuthor;
 import pl.edu.agh.automerger.core.objects.ConflictingCommit;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -16,11 +19,22 @@ public class ConflictsParser {
 
   private static final int MILLISECONDS_IN_SECOND = 1000;
 
+  private final Logger logger = LogManager.getLogger();
+
   private final Map<String, ConflictAuthor> conflictAuthorsByEmailsMap = new HashMap<>();
+
+  private final Repository gitRepository;
+
+  private final String mergedBranchName;
 
   private Map<String, int[][]> allConflicts;
 
   private ObjectId[] mergedCommits;
+
+  public ConflictsParser(final Repository gitRepository, final String mergedBranchName) {
+    this.gitRepository = gitRepository;
+    this.mergedBranchName = mergedBranchName;
+  }
 
   /**
    * Creates convenient tree structure, which groups conflicting files by commits, which caused the conflicts,
@@ -41,7 +55,6 @@ public class ConflictsParser {
 
   /**
    * Processes merge conflict for a single file with given path.
-   * TODO find a way to choose only conflicting commits from the merged branch
    */
   private void parseConflictsForFile(final String filePath) {
     final int[][] conflictsInFile = allConflicts.get(filePath);
@@ -52,13 +65,33 @@ public class ConflictsParser {
       for (int commitNumber = 0; commitNumber < conflictsInFile[conflictNumber].length - 1; commitNumber++) {
         // line numbers are counted from 0, thus incrementation
         conflictingLineNumber = conflictsInFile[conflictNumber][commitNumber] + 1;
+        if (conflictingLineNumber <= 0) {
+          continue;
+        }
 
-        if (conflictingLineNumber > 0) {
-          commit = (RevCommit) mergedCommits[commitNumber];
+        commit = (RevCommit) mergedCommits[commitNumber];
+        if (isCommitFromFeatureBranch(commit.getId())) {
           registerConflictingLine(commit, filePath, conflictingLineNumber);
         }
       }
     }
+  }
+
+  /**
+   * Checks if given ObjectId relates to a commit belonging to the merged branch.
+   */
+  private boolean isCommitFromFeatureBranch(final ObjectId commitId) {
+    final RevWalk walk = new RevWalk(gitRepository);
+    try {
+      final Ref featureBranchRef = gitRepository.getRef(Constants.R_HEADS.concat(mergedBranchName));
+      final RevCommit headCommit = walk.parseCommit(featureBranchRef.getObjectId());
+      final RevCommit searchedCommit = walk.parseCommit(commitId);
+      return walk.isMergedInto(searchedCommit, headCommit);
+    }
+    catch (IOException e) {
+      logger.error(e);
+    }
+    return false;
   }
 
   /**
