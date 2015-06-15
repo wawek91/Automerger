@@ -27,6 +27,8 @@ public abstract class Automerger {
 
   private Git git;
 
+  private boolean localRepositoryError;
+
   public Automerger() {
     repoConfig = getRepositoryConfiguration();
     prepareLocalRepository();
@@ -38,9 +40,11 @@ public abstract class Automerger {
   private void prepareLocalRepository() {
     try {
       git = new LocalRepositoryPreparer(repoConfig).prepareRepository();
+      localRepositoryError = false;
     }
     catch (Exception e) {
       logger.error(e);
+      localRepositoryError = true;
     }
   }
 
@@ -53,6 +57,11 @@ public abstract class Automerger {
    * Performs the merge operation.
    */
   public void merge() {
+    if (localRepositoryError) {
+      logger.warn("Merge aborted - local repository is not in a correct state.");
+      return;
+    }
+
     logger.info("Merge invoked");
     try {
       checkoutMainBranch();
