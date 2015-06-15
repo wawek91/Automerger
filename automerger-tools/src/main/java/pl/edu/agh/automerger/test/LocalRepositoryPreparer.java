@@ -2,6 +2,7 @@ package pl.edu.agh.automerger.test;
 
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
@@ -95,6 +96,20 @@ public class LocalRepositoryPreparer {
   }
 
   /**
+   * Returns CredentialsProvider object if Git username and password are configured, null otherwise.
+   */
+  private UsernamePasswordCredentialsProvider getCredentialsProvider() {
+    final String gitUsername = Parameters.getGitUsername();
+    final String gitPassword = Parameters.getGitPassword();
+
+    if (isNotEmpty(gitUsername) && isNotEmpty(gitPassword)) {
+      return new UsernamePasswordCredentialsProvider(gitUsername, gitPassword);
+    }
+
+    return null;
+  }
+
+  /**
    * Checks if given string contains any characters.
    */
   private boolean isNotEmpty(final String string) {
@@ -145,6 +160,10 @@ public class LocalRepositoryPreparer {
     if (!clonePerformed || !isMainBranch) {
       resetCurrentBranchToRemoteState(remoteBranchRef);
     }
+
+    if (!clonePerformed) {
+      pullBranch(branchName);
+    }
   }
 
   /**
@@ -166,6 +185,20 @@ public class LocalRepositoryPreparer {
    */
   private void checkoutMainBranch() throws GitAPIException {
     checkoutBranch(Parameters.getMainBranchName(), true);
+  }
+
+  /**
+   * Performs a pull on current branch from given remote branch, making the local one up-to-date.
+   */
+  private void pullBranch(final String branchName) throws GitAPIException {
+    final PullCommand pullCommand = git.pull().setRemoteBranchName(branchName);
+
+    final UsernamePasswordCredentialsProvider credentialsProvider = getCredentialsProvider();
+    if (credentialsProvider != null) {
+      pullCommand.setCredentialsProvider(credentialsProvider);
+    }
+
+    pullCommand.call();
   }
 
   /**

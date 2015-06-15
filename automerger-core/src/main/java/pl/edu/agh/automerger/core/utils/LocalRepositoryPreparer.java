@@ -4,9 +4,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.ResetCommand;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
+import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.RepositoryCache;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
@@ -79,13 +79,26 @@ public class LocalRepositoryPreparer {
         .setCloneAllBranches(false)
         .setBranchesToClone(Arrays.asList(repoConfig.getMainBranchRef(), repoConfig.getFeatureBranchRef()));
 
-    final String gitUsername = repoConfig.getGitUsername();
-    final String gitPassword = repoConfig.getGitPassword();
-    if (isNotEmpty(gitUsername) && isNotEmpty(gitPassword)) {
-      cloneCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(gitUsername, gitPassword));
+    final UsernamePasswordCredentialsProvider credentialsProvider = getCredentialsProvider();
+    if (credentialsProvider != null) {
+      cloneCommand.setCredentialsProvider(credentialsProvider);
     }
 
     cloneCommand.call();
+  }
+
+  /**
+   * Returns CredentialsProvider object if Git username and password are configured, null otherwise.
+   */
+  private UsernamePasswordCredentialsProvider getCredentialsProvider() {
+    final String gitUsername = repoConfig.getGitUsername();
+    final String gitPassword = repoConfig.getGitPassword();
+
+    if (isNotEmpty(gitUsername) && isNotEmpty(gitPassword)) {
+      return new UsernamePasswordCredentialsProvider(gitUsername, gitPassword);
+    }
+
+    return null;
   }
 
   /**
@@ -139,6 +152,11 @@ public class LocalRepositoryPreparer {
       logger.info("Hard reset on branch \"{}\" from ref \"{}\"", branchName, remoteBranchRef);
       resetCurrentBranchToRemoteState(remoteBranchRef);
     }
+
+    if (!clonePerformed) {
+      logger.info("Pulling branch \"{}\" from ref \"{}\"", branchName, remoteBranchRef);
+      pullBranch(branchName);
+    }
   }
 
   /**
@@ -149,10 +167,24 @@ public class LocalRepositoryPreparer {
   }
 
   /**
-   * Performs the hard reset on current branch, bringing it back to the HEAD state of given remote.
+   * Performs a hard reset on current branch, bringing it back to the HEAD state of given remote.
    */
   private void resetCurrentBranchToRemoteState(final String remoteBranchRef) throws GitAPIException {
     git.reset().setMode(ResetCommand.ResetType.HARD).setRef(remoteBranchRef).call();
+  }
+
+  /**
+   * Performs a pull on current branch from given remote branch, making the local one up-to-date.
+   */
+  private void pullBranch(final String branchName) throws GitAPIException {
+    final PullCommand pullCommand = git.pull().setRemoteBranchName(branchName);
+
+    final UsernamePasswordCredentialsProvider credentialsProvider = getCredentialsProvider();
+    if (credentialsProvider != null) {
+      pullCommand.setCredentialsProvider(credentialsProvider);
+    }
+
+    pullCommand.call();
   }
 
 }
