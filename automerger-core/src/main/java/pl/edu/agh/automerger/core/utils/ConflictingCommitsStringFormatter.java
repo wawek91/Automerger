@@ -48,12 +48,11 @@ public class ConflictingCommitsStringFormatter {
    */
   private void appendConflictingCommit(final ConflictingCommit commit) {
     builder.append(LINE_SEPARATOR)
-        .append(String.format(COMMIT_LINE_FORMAT, sdf.format(commit.getDate()), commit.getName(), commit.getMessage()))
-        .append(LINE_SEPARATOR);
+        .append(String.format(COMMIT_LINE_FORMAT, sdf.format(commit.getDate()), commit.getName(), commit.getMessage()));
 
     final Map<String, List<Long>> conflictingFilesLineNumbersMap = commit.getConflictingFilesLineNumbersMap();
     for (String filePath : conflictingFilesLineNumbersMap.keySet()) {
-      builder.append(FILE_ITEM_MARKER).append(filePath);
+      builder.append(LINE_SEPARATOR).append(FILE_ITEM_MARKER).append(filePath);
       appendLineNumbers(conflictingFilesLineNumbersMap.get(filePath));
     }
 
