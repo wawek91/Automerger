@@ -17,7 +17,7 @@ import java.util.*;
  */
 public class ConflictsParser {
 
-  private static final int MILLISECONDS_IN_SECOND = 1000;
+  private static final long MILLISECONDS_IN_SECOND = 1000;
 
   private final Logger logger = LogManager.getLogger();
 
