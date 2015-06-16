@@ -68,10 +68,17 @@ public abstract class RepositoryConfiguration extends Configuration {
   }
 
   /**
+   * Returns the main branch remote name.
+   */
+  public String getMainBranchRemote() {
+    return getProperty(MAIN_BRANCH_REMOTE);
+  }
+
+  /**
    * Returns a reference to the remote main branch.
    */
   public String getMainBranchRef() {
-    return String.format(REMOTE_REF_PATTERN, getProperty(MAIN_BRANCH_REMOTE), getMainBranchName());
+    return String.format(REMOTE_REF_PATTERN, getMainBranchRemote(), getMainBranchName());
   }
 
   /**
