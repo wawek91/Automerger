@@ -33,21 +33,6 @@ public abstract class Automerger {
 
   public Automerger() {
     repoConfig = getRepositoryConfiguration();
-    prepareLocalRepository();
-  }
-
-  /**
-   * Prepares Git object set on an up-to-date local repository.
-   */
-  private void prepareLocalRepository() {
-    try {
-      git = new LocalRepositoryPreparer(repoConfig).prepareRepository();
-      localRepositoryError = false;
-    }
-    catch (Exception e) {
-      logger.error(e);
-      localRepositoryError = true;
-    }
   }
 
   /**
@@ -59,6 +44,8 @@ public abstract class Automerger {
    * Performs the merge operation.
    */
   public void merge() {
+    prepareLocalRepository();
+
     if (localRepositoryError) {
       logger.warn("Merge aborted - local repository is not in a correct state.");
       return;
@@ -75,6 +62,20 @@ public abstract class Automerger {
     }
     catch (IOException e) {
       logger.error("IOException {}", e);
+    }
+  }
+
+  /**
+   * Prepares Git object set on an up-to-date local repository.
+   */
+  private void prepareLocalRepository() {
+    try {
+      git = new LocalRepositoryPreparer(repoConfig).prepareRepository();
+      localRepositoryError = false;
+    }
+    catch (Exception e) {
+      logger.error(e);
+      localRepositoryError = true;
     }
   }
 
