@@ -6,7 +6,9 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.MergeResult.MergeStatus;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import pl.edu.agh.automerger.core.config.RepositoryConfiguration;
 import pl.edu.agh.automerger.core.objects.ConflictAuthor;
 import pl.edu.agh.automerger.core.utils.ConflictingCommitsStringFormatter;
@@ -94,7 +96,7 @@ public abstract class Automerger {
   /**
    * Inspects merge operation result and handles it appropriately.
    */
-  private void handleMergeResult(final MergeResult mergeResult) {
+  private void handleMergeResult(final MergeResult mergeResult) throws GitAPIException {
     final MergeStatus mergeStatus = mergeResult.getMergeStatus();
     logger.info("Merge status: {}", mergeStatus);
 
@@ -108,8 +110,12 @@ public abstract class Automerger {
   /**
    * Pushes merged changes to the remote branch.
    */
-  private void pushToRemote() {
-    //git.push().call();
+  private void pushToRemote() throws GitAPIException {
+    logger.info("Publishing merged changes via push");
+    git.push()
+        .setRemote(repoConfig.getMainBranchRemote())
+        .setCredentialsProvider(new UsernamePasswordCredentialsProvider(repoConfig.getGitUsername(), repoConfig.getGitPassword()))
+        .call();
   }
 
   /**
